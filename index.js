@@ -6,10 +6,15 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Box3, Vector3 } from "three";
 
 const params = {
-  image: "ballroom",
   fov: 40,
   exposure: 1.0,
   backgroundBlurriness: 0.0,
+  metalness: 0,
+  roughness: 0.05,
+  transmission: 1,
+  thickness: 0.5,
+  ior: 1.5,
+  envMapIntensity: 1.5,
 };
 
 let container;
@@ -26,7 +31,7 @@ async function init() {
     50,
   );
   camera.position.set(0, 0, 3);
-  camera.position.set(0.37, 0.18, 1.25);
+  camera.position.set(0.43, -0.08, 1.27);
 
   scene = new THREE.Scene();
 
@@ -39,7 +44,6 @@ async function init() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
   // GLB
-
   const glbLoader = new GLTFLoader();
   const gltf = await glbLoader.loadAsync("public/morcea.glb");
   const gltfModel = gltf.scene;
@@ -53,11 +57,8 @@ async function init() {
 
   scene.add(gltfModel);
 
-  const loader = new HDRLoader();
-  const envMap = await loader.loadAsync("public/citrus.hdr");
-  envMap.mapping = THREE.EquirectangularReflectionMapping;
-  scene.environment = envMap;
-  scene.background = envMap;
+  loadTextureHdr("public/citrus.hdr");
+  // await loadTextureJpg("public/vibrant-sky.png");
 
   controls = new OrbitControls(camera, renderer.domElement);
   controls.minDistance = 0.1;
@@ -91,6 +92,22 @@ function render() {
   controls.update();
 
   renderer.render(scene, camera);
+}
+
+async function loadTextureJpg(url) {
+  const textureLoader = new THREE.TextureLoader();
+  const envMap = await textureLoader.loadAsync(url);
+  envMap.mapping = THREE.EquirectangularReflectionMapping;
+  scene.environment = envMap;
+  scene.background = envMap;
+}
+
+async function loadTextureHdr(url) {
+  const loader = new HDRLoader();
+  const envMap = await loader.loadAsync(url);
+  envMap.mapping = THREE.EquirectangularReflectionMapping;
+  scene.environment = envMap;
+  scene.background = envMap;
 }
 
 window.addEventListener("keydown", (e) => {

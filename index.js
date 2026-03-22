@@ -136,7 +136,7 @@ async function init() {
   scene.add(pivot);
   currentModel = pivot;
 
-  await loadTextureHdr("public/rogland_4k.hdr");
+  await loadTextureExr("public/rogland_4k.exr");
   // await loadTextureHdr("public/kloofendal.hdr");
   // await loadTextureHdr("public/sunflower.hdr");
   // await loadTextureJpg("public/vibrant-sky.png");
@@ -401,6 +401,22 @@ async function loadTextureHdr(url) {
     console.timeEnd("loadtexture");
   } catch (err) {
     console.error("HDR load failed:", err);
+  }
+}
+
+async function loadTextureExr(url) {
+  console.time("loadtexture");
+  try {
+    const loader = new EXRLoader();
+    console.log("Starting EXR load:", url);
+    const envMap = await loader.loadAsync(url);
+    console.log("EXR loaded");
+    envMap.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = envMap;
+    scene.background = envMap;
+    console.timeEnd("loadtexture");
+  } catch (err) {
+    console.error("EXR load failed:", err);
   }
 }
 

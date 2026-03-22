@@ -37,7 +37,7 @@ const timer = new THREE.Timer();
 
 // Camera animation
 
-const cameraStart = new Vector3(-0.06, -0.03, 1.35);
+const cameraStart = new Vector3(-0.012, 0.03, 1.34);
 const cameraEnd = new Vector3(-0.27, -0.12, 1.31);
 let animationProgress = 0;
 const animationDuration = 0.75; // seconds
@@ -136,7 +136,7 @@ async function init() {
   scene.add(pivot);
   currentModel = pivot;
 
-  await loadTextureHdr("public/rogland.hdr");
+  await loadTextureHdr("public/rogland_4k.hdr");
   // await loadTextureHdr("public/kloofendal.hdr");
   // await loadTextureHdr("public/sunflower.hdr");
   // await loadTextureJpg("public/vibrant-sky.png");

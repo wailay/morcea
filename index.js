@@ -80,6 +80,7 @@ function easeIn(t) {
 
 async function init() {
   container = document.createElement("div");
+  container.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;";
   document.body.appendChild(container);
 
   camera = new THREE.PerspectiveCamera(
@@ -95,6 +96,7 @@ async function init() {
   renderer = new THREE.WebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.domElement.style.cssText = "position:absolute;top:0;left:0;width:100%!important;height:100%!important;";
 
   container.appendChild(renderer.domElement);
 
@@ -341,13 +343,9 @@ async function init() {
 }
 
 function onWindowResize() {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-
-  camera.aspect = width / height;
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-
-  renderer.setSize(width, height);
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function animate() {

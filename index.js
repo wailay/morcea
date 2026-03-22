@@ -7,6 +7,8 @@ import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Box3, Vector3 } from "three";
 
+const DEBUG = false;
+
 const defaults = {
   color: "#ffffff",
   metalness: 0,
@@ -21,6 +23,8 @@ const params = {
   fov: 40,
   exposure: 1.0,
   backgroundBlurriness: 0.0,
+  autoRotate: true,
+  rotateSpeed: 0.5,
   ...defaults,
 };
 
@@ -32,8 +36,9 @@ const originalMaterials = new Map();
 const timer = new THREE.Timer();
 
 // Camera animation
+
 const cameraStart = new Vector3(-0.06, -0.03, 1.35);
-const cameraEnd = new Vector3(-0.611, -0.35, 1.146);
+const cameraEnd = new Vector3(-0.27, -0.12, 1.31);
 let animationProgress = 0;
 const animationDuration = 0.75; // seconds
 let animationComplete = false;
@@ -104,10 +109,18 @@ async function init() {
   gltfModel.updateMatrixWorld(true);
   console.timeEnd("loadmodel");
 
-  // Center the model at origin
+  // Center the model using a pivot group
   const box = new Box3().setFromObject(gltfModel);
   const center = box.getCenter(new Vector3());
   gltfModel.position.sub(center);
+
+  const pivot = new THREE.Group();
+  pivot.add(gltfModel);
+
+  // Store original materials
+  gltfModel.traverse((child) => {
+    if (child.isMesh) originalMaterials.set(child, child.material);
+  });
 
   // Create material (for GUI controls, not applied initially)
   material = new THREE.MeshPhysicalMaterial({
@@ -120,10 +133,10 @@ async function init() {
     envMapIntensity: params.envMapIntensity,
   });
 
-  scene.add(gltfModel);
-  currentModel = gltfModel;
+  scene.add(pivot);
+  currentModel = pivot;
 
-  await loadTextureHdr("public/citrus.hdr");
+  await loadTextureHdr("public/rogland.hdr");
   // await loadTextureHdr("public/kloofendal.hdr");
   // await loadTextureHdr("public/sunflower.hdr");
   // await loadTextureJpg("public/vibrant-sky.png");
@@ -135,21 +148,32 @@ async function init() {
   controls.target.set(0, 0, 0);
   controls.enabled = false; // Disable during intro animation
 
-  // Reset timer so loading time isn't counted
+  // Reset timer and animation state so loading time isn't counted
   timer.reset();
+  timer.update();
+  timer.getDelta(); // Clear any accumulated delta
+  animationProgress = 0;
+  animationComplete = false;
   renderer.setAnimationLoop(animate);
 
   window.addEventListener("resize", onWindowResize);
 
-  // GUI
+  // Environment defaults
+  scene.environmentRotation.order = "YXZ";
+  scene.backgroundRotation.order = "YXZ";
+  scene.environmentRotation.set(0, 1.13, 0);
+  scene.backgroundRotation.set(0, 1.13, 0);
+
+  // GUI (debug only)
+  if (!DEBUG) return;
+
   const gui = new GUI();
   const hdrParams = {
     loadHDR: () => hdrInput.click(),
     rotationX: 0,
     rotationY: 0,
+    rotationZ: 0,
   };
-  scene.environmentRotation.set(0, 0, 0);
-  scene.backgroundRotation.set(0, 0, 0);
   gui.add(hdrParams, "loadHDR").name("Load HDR File");
   gui
     .add(hdrParams, "rotationX", -Math.PI, Math.PI, 0.01)
@@ -164,6 +188,13 @@ async function init() {
     .onChange((v) => {
       scene.environmentRotation.y = v;
       scene.backgroundRotation.y = v;
+    });
+  gui
+    .add(hdrParams, "rotationZ", -Math.PI, Math.PI, 0.01)
+    .name("HDR Roll")
+    .onChange((v) => {
+      scene.environmentRotation.z = v;
+      scene.backgroundRotation.z = v;
     });
 
   // Material controls
@@ -230,6 +261,8 @@ async function init() {
       "reset",
     )
     .name("Reset Material");
+  matFolder.add(params, "autoRotate").name("Auto Rotate");
+  matFolder.add(params, "rotateSpeed", 0, 2, 0.1).name("Rotate Speed");
   matFolder.open();
 
   // Hidden file input
@@ -285,10 +318,13 @@ async function init() {
     if (currentModel) scene.remove(currentModel);
     originalMaterials.clear();
 
-    // Center new model
+    // Center new model using pivot
     const box = new Box3().setFromObject(newModel);
     const center = box.getCenter(new Vector3());
     newModel.position.sub(center);
+
+    const pivot = new THREE.Group();
+    pivot.add(newModel);
 
     // Store original materials then apply custom material
     newModel.traverse((child) => {
@@ -298,8 +334,8 @@ async function init() {
       }
     });
 
-    scene.add(newModel);
-    currentModel = newModel;
+    scene.add(pivot);
+    currentModel = pivot;
     URL.revokeObjectURL(url);
   });
 }
@@ -333,6 +369,11 @@ function render() {
     }
     const t = easeIn(animationProgress);
     camera.position.lerpVectors(cameraStart, cameraEnd, t);
+  }
+
+  // Model rotation
+  if (currentModel && params.autoRotate) {
+    currentModel.rotation.y += params.rotateSpeed * timer.getDelta();
   }
 
   controls.update();

@@ -1,14 +1,14 @@
 import * as THREE from "three";
 
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
+import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Box3, Vector3 } from "three";
 
-const params = {
-  fov: 40,
-  exposure: 1.0,
-  backgroundBlurriness: 0.0,
+const defaults = {
+  color: "#ffffff",
   metalness: 0,
   roughness: 0.05,
   transmission: 1,
@@ -17,9 +17,19 @@ const params = {
   envMapIntensity: 1.5,
 };
 
+const params = {
+  fov: 40,
+  exposure: 1.0,
+  backgroundBlurriness: 0.0,
+  ...defaults,
+};
+
 let container;
 let camera, scene, renderer, controls;
-const clock = new THREE.Clock();
+let currentModel;
+let material;
+const originalMaterials = new Map();
+const timer = new THREE.Timer();
 
 // Camera animation
 const cameraStart = new Vector3(-0.06, -0.03, 1.35);
@@ -86,20 +96,36 @@ async function init() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
   // GLB
+  console.time("loadmodel");
   const glbLoader = new GLTFLoader();
-  const gltf = await glbLoader.loadAsync("public/morcea.glb");
+  const gltf = await glbLoader.loadAsync("public/m.glb");
   const gltfModel = gltf.scene;
   // gltfModel.rotation.y = Math.PI;
   gltfModel.updateMatrixWorld(true);
+  console.timeEnd("loadmodel");
 
   // Center the model at origin
   const box = new Box3().setFromObject(gltfModel);
   const center = box.getCenter(new Vector3());
   gltfModel.position.sub(center);
 
+  // Create material (for GUI controls, not applied initially)
+  material = new THREE.MeshPhysicalMaterial({
+    color: params.color,
+    metalness: params.metalness,
+    roughness: params.roughness,
+    transmission: params.transmission,
+    thickness: params.thickness,
+    ior: params.ior,
+    envMapIntensity: params.envMapIntensity,
+  });
+
   scene.add(gltfModel);
+  currentModel = gltfModel;
 
   await loadTextureHdr("public/citrus.hdr");
+  // await loadTextureHdr("public/kloofendal.hdr");
+  // await loadTextureHdr("public/sunflower.hdr");
   // await loadTextureJpg("public/vibrant-sky.png");
 
   controls = new OrbitControls(camera, renderer.domElement);
@@ -109,10 +135,173 @@ async function init() {
   controls.target.set(0, 0, 0);
   controls.enabled = false; // Disable during intro animation
 
-  clock.getDelta(); // Reset clock so loading time isn't counted
+  // Reset timer so loading time isn't counted
+  timer.reset();
   renderer.setAnimationLoop(animate);
 
   window.addEventListener("resize", onWindowResize);
+
+  // GUI
+  const gui = new GUI();
+  const hdrParams = {
+    loadHDR: () => hdrInput.click(),
+    rotationX: 0,
+    rotationY: 0,
+  };
+  scene.environmentRotation.set(0, 0, 0);
+  scene.backgroundRotation.set(0, 0, 0);
+  gui.add(hdrParams, "loadHDR").name("Load HDR File");
+  gui
+    .add(hdrParams, "rotationX", -Math.PI, Math.PI, 0.01)
+    .name("HDR Tilt")
+    .onChange((v) => {
+      scene.environmentRotation.x = v;
+      scene.backgroundRotation.x = v;
+    });
+  gui
+    .add(hdrParams, "rotationY", -Math.PI, Math.PI, 0.01)
+    .name("HDR Pan")
+    .onChange((v) => {
+      scene.environmentRotation.y = v;
+      scene.backgroundRotation.y = v;
+    });
+
+  // Material controls
+  const matFolder = gui.addFolder("Material");
+  matFolder
+    .addColor(params, "color")
+    .name("Color")
+    .onChange((v) => {
+      material.color.set(v);
+    });
+  matFolder.add(params, "metalness", 0, 1, 0.01).onChange((v) => {
+    material.metalness = v;
+  });
+  matFolder.add(params, "roughness", 0, 1, 0.01).onChange((v) => {
+    material.roughness = v;
+  });
+  matFolder.add(params, "transmission", 0, 1, 0.01).onChange((v) => {
+    material.transmission = v;
+  });
+  matFolder.add(params, "thickness", 0, 2, 0.01).onChange((v) => {
+    material.thickness = v;
+  });
+  matFolder
+    .add(params, "ior", 1, 2.5, 0.01)
+    .name("IOR")
+    .onChange((v) => {
+      material.ior = v;
+    });
+  matFolder
+    .add(params, "envMapIntensity", 0, 5, 0.1)
+    .name("Reflection")
+    .onChange((v) => {
+      material.envMapIntensity = v;
+    });
+  matFolder
+    .add(
+      {
+        apply: () => {
+          if (currentModel) {
+            currentModel.traverse((child) => {
+              if (child.isMesh) child.material = material;
+            });
+          }
+        },
+      },
+      "apply",
+    )
+    .name("Apply Material");
+  matFolder
+    .add(
+      {
+        reset: () => {
+          Object.assign(params, defaults);
+          material.color.set(defaults.color);
+          material.metalness = defaults.metalness;
+          material.roughness = defaults.roughness;
+          material.transmission = defaults.transmission;
+          material.thickness = defaults.thickness;
+          material.ior = defaults.ior;
+          material.envMapIntensity = defaults.envMapIntensity;
+          matFolder.controllersRecursive().forEach((c) => c.updateDisplay());
+        },
+      },
+      "reset",
+    )
+    .name("Reset Material");
+  matFolder.open();
+
+  // Hidden file input
+  const hdrInput = document.createElement("input");
+  hdrInput.type = "file";
+  hdrInput.accept = ".hdr,.exr,.jpg,.jpeg,.png";
+  hdrInput.style.display = "none";
+  document.body.appendChild(hdrInput);
+
+  hdrInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const ext = file.name.split(".").pop().toLowerCase();
+
+    let envMap;
+    if (ext === "hdr") {
+      const loader = new HDRLoader();
+      envMap = await loader.loadAsync(url);
+    } else if (ext === "exr") {
+      const loader = new EXRLoader();
+      envMap = await loader.loadAsync(url);
+    } else {
+      const loader = new THREE.TextureLoader();
+      envMap = await loader.loadAsync(url);
+    }
+
+    envMap.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = envMap;
+    scene.background = envMap;
+    URL.revokeObjectURL(url);
+  });
+
+  // GLB file input
+  const glbParams = { loadGLB: () => glbInput.click() };
+  gui.add(glbParams, "loadGLB").name("Load GLB Model");
+
+  const glbInput = document.createElement("input");
+  glbInput.type = "file";
+  glbInput.accept = ".glb,.gltf";
+  glbInput.style.display = "none";
+  document.body.appendChild(glbInput);
+
+  glbInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const loader = new GLTFLoader();
+    const gltf = await loader.loadAsync(url);
+    const newModel = gltf.scene;
+
+    // Remove old model
+    if (currentModel) scene.remove(currentModel);
+    originalMaterials.clear();
+
+    // Center new model
+    const box = new Box3().setFromObject(newModel);
+    const center = box.getCenter(new Vector3());
+    newModel.position.sub(center);
+
+    // Store original materials then apply custom material
+    newModel.traverse((child) => {
+      if (child.isMesh) {
+        originalMaterials.set(child, child.material);
+        child.material = material;
+      }
+    });
+
+    scene.add(newModel);
+    currentModel = newModel;
+    URL.revokeObjectURL(url);
+  });
 }
 
 function onWindowResize() {
@@ -130,12 +319,13 @@ function animate() {
 }
 
 function render() {
+  timer.update();
   renderer.toneMappingExposure = params.exposure;
   scene.backgroundBlurriness = params.backgroundBlurriness;
 
   // Camera intro animation
   if (!animationComplete) {
-    animationProgress += clock.getDelta() / animationDuration;
+    animationProgress += timer.getDelta() / animationDuration;
     if (animationProgress >= 1) {
       animationProgress = 1;
       animationComplete = true;
@@ -158,11 +348,19 @@ async function loadTextureJpg(url) {
 }
 
 async function loadTextureHdr(url) {
-  const loader = new HDRLoader();
-  const envMap = await loader.loadAsync(url);
-  envMap.mapping = THREE.EquirectangularReflectionMapping;
-  scene.environment = envMap;
-  scene.background = envMap;
+  console.time("loadtexture");
+  try {
+    const loader = new HDRLoader();
+    console.log("Starting HDR load:", url);
+    const envMap = await loader.loadAsync(url);
+    console.log("HDR loaded");
+    envMap.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = envMap;
+    scene.background = envMap;
+    console.timeEnd("loadtexture");
+  } catch (err) {
+    console.error("HDR load failed:", err);
+  }
 }
 
 window.addEventListener("keydown", (e) => {

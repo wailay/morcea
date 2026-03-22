@@ -6,4 +6,4 @@ bucket = "./"
 
 # Exclude node_modules and other unnecessary files
 [build.upload]
-exclude = ["node_modules", ".git", "*.md"]
+exclude = ["node_modules", ".git", "*.md", "branding"]

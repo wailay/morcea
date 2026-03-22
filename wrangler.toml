@@ -1,0 +1,9 @@
+name = "morcea"
+compatibility_date = "2026-03-22"
+
+[site]
+bucket = "./"
+
+# Exclude node_modules and other unnecessary files
+[build.upload]
+exclude = ["node_modules", ".git", "*.md"]

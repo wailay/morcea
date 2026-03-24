@@ -4,10 +4,11 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Box3, Vector3 } from "three";
 
-const DEBUG = false;
+let DEBUG = false;
 
 const defaults = {
   color: "#ffffff",
@@ -29,14 +30,14 @@ const params = {
 };
 
 let container;
-let camera, scene, renderer, controls;
+let camera, scene, renderer, controls, gui;
+let ktx2Loader;
 let currentModel;
 let material;
 const originalMaterials = new Map();
 const timer = new THREE.Timer();
 
 // Camera animation
-
 const cameraStart = new Vector3(-0.012, 0.03, 1.34);
 const cameraEnd = new Vector3(-0.27, -0.12, 1.31);
 let animationProgress = 0;
@@ -80,7 +81,8 @@ function easeIn(t) {
 
 async function init() {
   container = document.createElement("div");
-  container.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;";
+  container.style.cssText =
+    "position:fixed;top:0;left:0;width:100%;height:100%;";
   document.body.appendChild(container);
 
   camera = new THREE.PerspectiveCamera(
@@ -96,20 +98,23 @@ async function init() {
   renderer = new THREE.WebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.domElement.style.cssText = "position:absolute;top:0;left:0;width:100%!important;height:100%!important;";
+  renderer.domElement.style.cssText =
+    "position:absolute;top:0;left:0;width:100%!important;height:100%!important;";
 
   container.appendChild(renderer.domElement);
 
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
+  // Initialize KTX2 loader
+  ktx2Loader = new KTX2Loader();
+  ktx2Loader.setTranscoderPath(
+    "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/libs/basis/",
+  );
+  ktx2Loader.detectSupport(renderer);
+
   // GLB
   console.time("loadmodel");
-  const glbLoader = new GLTFLoader();
-  const gltf = await glbLoader.loadAsync("public/m.glb");
-  const gltfModel = gltf.scene;
-  // gltfModel.rotation.y = Math.PI;
-  gltfModel.updateMatrixWorld(true);
-  console.timeEnd("loadmodel");
+  const gltfModel = await loadModel("public/m.glb");
 
   // Center the model using a pivot group
   const box = new Box3().setFromObject(gltfModel);
@@ -138,17 +143,9 @@ async function init() {
   scene.add(pivot);
   currentModel = pivot;
 
-  await loadTextureExr("public/rogland_4k.exr");
-  // await loadTextureHdr("public/kloofendal.hdr");
-  // await loadTextureHdr("public/sunflower.hdr");
-  // await loadTextureJpg("public/vibrant-sky.png");
+  await loadEnvMap("public/rogland_4k.exr", "exr");
 
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.minDistance = 0.1;
-  controls.maxDistance = 20;
-  controls.enableDamping = true;
-  controls.target.set(0, 0, 0);
-  controls.enabled = false; // Disable during intro animation
+  initCameraControls();
 
   // Reset timer and animation state so loading time isn't counted
   timer.reset();
@@ -167,9 +164,93 @@ async function init() {
   scene.backgroundRotation.set(0, 1.13, 0);
 
   // GUI (debug only)
-  if (!DEBUG) return;
+  if (DEBUG) {
+    debugGUI();
+  }
+}
 
-  const gui = new GUI();
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  render();
+}
+
+function render() {
+  timer.update();
+  const delta = timer.getDelta();
+
+  renderer.toneMappingExposure = params.exposure;
+  scene.backgroundBlurriness = params.backgroundBlurriness;
+
+  // Camera intro animation
+  if (!animationComplete) {
+    animationProgress += delta / animationDuration;
+    if (animationProgress >= 1) {
+      animationProgress = 1;
+      animationComplete = true;
+      controls.enabled = true;
+    }
+    const t = easeIn(animationProgress);
+    camera.position.lerpVectors(cameraStart, cameraEnd, t);
+  }
+
+  // Model rotation
+  if (currentModel && params.autoRotate) {
+    currentModel.rotation.y += params.rotateSpeed * delta;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+async function initCameraControls() {
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.minDistance = 0.1;
+  controls.maxDistance = 20;
+  controls.enableDamping = true;
+  controls.target.set(0, 0, 0);
+  controls.enabled = false; // Disable during intro animation
+}
+
+async function loadEnvMap(url, ext) {
+  let envMap;
+  console.time(`loadEnvMap-${url}`);
+  if (ext === "hdr") {
+    const loader = new HDRLoader();
+    envMap = await loader.loadAsync(url);
+  } else if (ext === "exr") {
+    const loader = new EXRLoader();
+    envMap = await loader.loadAsync(url);
+  } else if (ext === "ktx2") {
+    envMap = await ktx2Loader.loadAsync(url);
+  } else {
+    const loader = new THREE.TextureLoader();
+    envMap = await loader.loadAsync(url);
+  }
+  console.timeEnd(`loadEnvMap-${url}`);
+
+  envMap.mapping = THREE.EquirectangularReflectionMapping;
+  scene.environment = envMap;
+  scene.background = envMap;
+}
+
+async function loadModel(url) {
+  const glbLoader = new GLTFLoader();
+  const gltf = await glbLoader.loadAsync(url);
+  const gltfModel = gltf.scene;
+  // gltfModel.rotation.y = Math.PI;
+  gltfModel.updateMatrixWorld(true);
+  console.timeEnd("loadmodel");
+
+  return gltfModel;
+}
+
+async function debugGUI() {
+  gui = new GUI();
   const hdrParams = {
     loadHDR: () => hdrInput.click(),
     rotationX: 0,
@@ -270,7 +351,7 @@ async function init() {
   // Hidden file input
   const hdrInput = document.createElement("input");
   hdrInput.type = "file";
-  hdrInput.accept = ".hdr,.exr,.jpg,.jpeg,.png";
+  hdrInput.accept = ".hdr,.exr,.ktx2,.jpg,.jpeg,.png";
   hdrInput.style.display = "none";
   document.body.appendChild(hdrInput);
 
@@ -280,21 +361,8 @@ async function init() {
     const url = URL.createObjectURL(file);
     const ext = file.name.split(".").pop().toLowerCase();
 
-    let envMap;
-    if (ext === "hdr") {
-      const loader = new HDRLoader();
-      envMap = await loader.loadAsync(url);
-    } else if (ext === "exr") {
-      const loader = new EXRLoader();
-      envMap = await loader.loadAsync(url);
-    } else {
-      const loader = new THREE.TextureLoader();
-      envMap = await loader.loadAsync(url);
-    }
+    loadEnvMap(url, ext);
 
-    envMap.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = envMap;
-    scene.background = envMap;
     URL.revokeObjectURL(url);
   });
 
@@ -342,83 +410,17 @@ async function init() {
   });
 }
 
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function animate() {
-  render();
-}
-
-function render() {
-  timer.update();
-  renderer.toneMappingExposure = params.exposure;
-  scene.backgroundBlurriness = params.backgroundBlurriness;
-
-  // Camera intro animation
-  if (!animationComplete) {
-    animationProgress += timer.getDelta() / animationDuration;
-    if (animationProgress >= 1) {
-      animationProgress = 1;
-      animationComplete = true;
-      controls.enabled = true;
-    }
-    const t = easeIn(animationProgress);
-    camera.position.lerpVectors(cameraStart, cameraEnd, t);
-  }
-
-  // Model rotation
-  if (currentModel && params.autoRotate) {
-    currentModel.rotation.y += params.rotateSpeed * timer.getDelta();
-  }
-
-  controls.update();
-  renderer.render(scene, camera);
-}
-
-async function loadTextureJpg(url) {
-  const textureLoader = new THREE.TextureLoader();
-  const envMap = await textureLoader.loadAsync(url);
-  envMap.mapping = THREE.EquirectangularReflectionMapping;
-  scene.environment = envMap;
-  scene.background = envMap;
-}
-
-async function loadTextureHdr(url) {
-  console.time("loadtexture");
-  try {
-    const loader = new HDRLoader();
-    console.log("Starting HDR load:", url);
-    const envMap = await loader.loadAsync(url);
-    console.log("HDR loaded");
-    envMap.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = envMap;
-    scene.background = envMap;
-    console.timeEnd("loadtexture");
-  } catch (err) {
-    console.error("HDR load failed:", err);
-  }
-}
-
-async function loadTextureExr(url) {
-  console.time("loadtexture");
-  try {
-    const loader = new EXRLoader();
-    console.log("Starting EXR load:", url);
-    const envMap = await loader.loadAsync(url);
-    console.log("EXR loaded");
-    envMap.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = envMap;
-    scene.background = envMap;
-    console.timeEnd("loadtexture");
-  } catch (err) {
-    console.error("EXR load failed:", err);
-  }
-}
-
 window.addEventListener("keydown", (e) => {
+  if (e.key === "G" && e.shiftKey) {
+    if (!gui) {
+      DEBUG = true;
+      debugGUI();
+    } else {
+      DEBUG = false;
+      gui.destroy();
+      gui = undefined;
+    }
+  }
   if (e.key === "p") console.log(camera.position);
 });
 

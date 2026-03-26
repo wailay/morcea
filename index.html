@@ -26,7 +26,7 @@
     <script type="module" src="index.js"></script>
   </head>
   <body>
-    <button class="waitlist-btn">Join the Waitlist</button>
+    <button class="waitlist-btn">Join the waitlist</button>
 
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal">
@@ -47,6 +47,14 @@
       const closeBtn = document.getElementById("modalClose");
 
       btn.addEventListener("click", () => overlay.classList.add("active"));
+
+      const form = document.querySelector(".modal-form");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        // TODO: send data to backend
+        overlay.classList.remove("active");
+        form.reset();
+      });
       closeBtn.addEventListener("click", () =>
         overlay.classList.remove("active"),
       );

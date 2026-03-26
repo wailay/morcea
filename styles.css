@@ -48,10 +48,12 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
   z-index: 2000;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  box-sizing: border-box;
 }
 
 .modal-overlay.active {

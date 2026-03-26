@@ -143,7 +143,8 @@ async function init() {
   scene.add(pivot);
   currentModel = pivot;
 
-  await loadEnvMap("public/rogland_4k.exr", "exr");
+  // Progressive loading: 1k first (fast), then swap to 4k
+  await loadEnvMap("public/rogland_1k.hdr", "hdr");
 
   initCameraControls();
 
@@ -424,6 +425,43 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "p") console.log(camera.position);
 });
 
+function initWorker() {
+  const myWorker = new Worker("worker.js", { type: "module" });
+
+  myWorker.postMessage({
+    message: "loadTexture",
+    url: "public/rogland_4k.exr",
+    ext: "exr",
+  });
+  console.log("Message posted to worker");
+
+  myWorker.onmessage = (e) => {
+    const { data: textureBufferData, w, h, type, format, colorSpace } = e.data;
+
+    const dataTexture = new THREE.DataTexture(
+      textureBufferData,
+      w,
+      h,
+      format,
+      type,
+      THREE.EquirectangularReflectionMapping,
+    );
+
+    dataTexture.minFilter = THREE.LinearFilter;
+    dataTexture.magFilter = THREE.LinearFilter;
+    dataTexture.generateMipmaps = false;
+    dataTexture.colorSpace = colorSpace;
+    dataTexture.needsUpdate = true;
+
+    scene.environment = dataTexture;
+    scene.background = dataTexture;
+
+    console.log("Environment updated from worker");
+  };
+}
+
 (async () => {
   await init();
+  await new Promise((r) => setTimeout(r, 2000));
+  initWorker();
 })();

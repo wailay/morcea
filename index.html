@@ -2,9 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#000000" />
     <title>Morcéa</title>
@@ -25,7 +31,7 @@
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal">
         <button class="modal-close" id="modalClose">&times;</button>
-        <h2>Join the Waitlist</h2>
+        <h2>Join the waitlist</h2>
         <form class="modal-form">
           <input type="text" placeholder="First Name" required />
           <input type="text" placeholder="Last Name" required />
@@ -36,14 +42,16 @@
     </div>
 
     <script>
-      const btn = document.querySelector('.waitlist-btn');
-      const overlay = document.getElementById('modalOverlay');
-      const closeBtn = document.getElementById('modalClose');
+      const btn = document.querySelector(".waitlist-btn");
+      const overlay = document.getElementById("modalOverlay");
+      const closeBtn = document.getElementById("modalClose");
 
-      btn.addEventListener('click', () => overlay.classList.add('active'));
-      closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) overlay.classList.remove('active');
+      btn.addEventListener("click", () => overlay.classList.add("active"));
+      closeBtn.addEventListener("click", () =>
+        overlay.classList.remove("active"),
+      );
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) overlay.classList.remove("active");
       });
     </script>
   </body>

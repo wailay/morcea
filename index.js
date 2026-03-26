@@ -38,8 +38,8 @@ const originalMaterials = new Map();
 const timer = new THREE.Timer();
 
 // Camera animation
-const cameraStart = new Vector3(-0.012, 0.03, 1.34);
-const cameraEnd = new Vector3(-0.27, -0.12, 1.31);
+const cameraStart = new Vector3(-0.012, 0.03, 1.1);
+const cameraEnd = new Vector3(-0.22, -0.1, 1.05);
 let animationProgress = 0;
 const animationDuration = 0.75; // seconds
 let animationComplete = false;

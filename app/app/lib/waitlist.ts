@@ -68,6 +68,11 @@ export async function appendToWaitlist(
   lastName: string,
   email: string,
 ) {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[dev] skipping spreadsheet:", firstName, lastName, email);
+    return;
+  }
+
   const today = new Date();
   const date = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
 

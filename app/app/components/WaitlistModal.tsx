@@ -5,6 +5,12 @@ import { appendToWaitlist } from "../lib/waitlist";
 
 export function WaitlistModal() {
   const [isOpen, setIsOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  function close() {
+    setIsOpen(false);
+    setTimeout(() => setSubmitted(false), 300);
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -17,8 +23,8 @@ export function WaitlistModal() {
       formData.get("email") as string,
     );
 
-    setIsOpen(false);
     form.reset();
+    setSubmitted(true);
   }
 
   return (
@@ -30,11 +36,11 @@ export function WaitlistModal() {
       <div
         className={`modal-overlay${isOpen ? " active" : ""}`}
         onClick={(e) => {
-          if (e.target === e.currentTarget) setIsOpen(false);
+          if (e.target === e.currentTarget) close();
         }}
       >
         <div className="modal">
-          <button className="modal-close" onClick={() => setIsOpen(false)}>
+          <button className="modal-close" onClick={close}>
             &times;
           </button>
           <h2>Join the waitlist</h2>
@@ -54,6 +60,15 @@ export function WaitlistModal() {
             <input type="email" name="email" placeholder="Email" required />
             <button type="submit">Submit</button>
           </form>
+          <div className={`modal-confirm${submitted ? " modal-confirm-visible" : ""}`}>
+            <div className="modal-confirm-inner">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="8" fill="rgba(255,255,255,0.15)" />
+                <path d="M5 8.5L7 10.5L11 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>Added to the waitlist. Stay tuned!</span>
+            </div>
+          </div>
         </div>
       </div>
     </>

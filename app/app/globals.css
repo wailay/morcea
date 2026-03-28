@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+canvas {
+  display: block;
+}
+
+.waitlist-btn {
+  position: fixed;
+  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 32px;
+  font-size: 16px;
+  font-family: system-ui, sans-serif;
+  font-weight: 500;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.waitlist-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateX(-50%) scale(1.05);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  box-sizing: border-box;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  padding: 40px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  transform: translateY(100vh);
+  transition: transform 0.4s ease;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.modal-overlay.active .modal {
+  transform: translateY(0);
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.modal-close:hover {
+  opacity: 1;
+}
+
+.modal h2 {
+  color: white;
+  font-family: system-ui, sans-serif;
+  font-weight: 500;
+  margin: 0 0 30px 0;
+  text-align: center;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-form input {
+  padding: 14px 18px;
+  font-size: 16px;
+  font-family: system-ui, sans-serif;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  color: white;
+  outline: none;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.modal-form input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.modal-form input:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.modal-form button {
+  padding: 14px;
+  font-size: 16px;
+  font-family: system-ui, sans-serif;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.modal-form button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.02);
+}

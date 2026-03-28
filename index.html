@@ -41,7 +41,9 @@
       </div>
     </div>
 
-    <script>
+    <script type="module">
+      import { appendToWaitlist } from "./waitlist.js";
+
       const btn = document.querySelector(".waitlist-btn");
       const overlay = document.getElementById("modalOverlay");
       const closeBtn = document.getElementById("modalClose");
@@ -54,19 +56,16 @@
 
         const inputs = form.querySelectorAll("input");
 
-        fetch("/api/waitlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            firstName: inputs[0].value,
-            lastName: inputs[1].value,
-            email: inputs[2].value,
-          }),
-        });
+        appendToWaitlist(
+          inputs[0].value,
+          inputs[1].value,
+          inputs[2].value
+        );
 
         overlay.classList.remove("active");
         form.reset();
       });
+
       closeBtn.addEventListener("click", () =>
         overlay.classList.remove("active"),
       );

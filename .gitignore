@@ -4,3 +4,7 @@ branding
 .env
 .dev.vars
 .wrangler
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json

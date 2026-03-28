@@ -244,7 +244,9 @@ export default function ThreeScene() {
               material.thickness = defaults.thickness;
               material.ior = defaults.ior;
               material.envMapIntensity = defaults.envMapIntensity;
-              matFolder.controllersRecursive().forEach((c) => c.updateDisplay());
+              matFolder
+                .controllersRecursive()
+                .forEach((c) => c.updateDisplay());
             },
           },
           "reset",
@@ -333,7 +335,6 @@ export default function ThreeScene() {
         url: "/rogland_4k.exr",
         ext: "exr",
       });
-      console.log("Message posted to worker");
 
       myWorker.onmessage = (e) => {
         if (disposed) return;
@@ -360,8 +361,6 @@ export default function ThreeScene() {
         dataTexture.generateMipmaps = false;
         dataTexture.colorSpace = colorSpace;
         dataTexture.needsUpdate = true;
-
-        renderer.initTexture(dataTexture);
 
         scene.environment = dataTexture;
         scene.background = dataTexture;
@@ -460,8 +459,6 @@ export default function ThreeScene() {
     // Setup
     (async () => {
       await init();
-      if (disposed) return;
-      await new Promise((r) => setTimeout(r, 2000));
       if (disposed) return;
       initWorker();
     })();

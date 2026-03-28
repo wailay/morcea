@@ -19,11 +19,6 @@ async function loadTexture(url, ext) {
   }
   console.timeEnd(`worker-loadTexture-${url}`);
 
-  console.log("image", dataTexture.image);
-  // image.data Uint16Array
-  console.log("data", dataTexture.image.data);
-  console.log("buffer", dataTexture.image.data.buffer);
-
   postMessage(
     {
       data: dataTexture.image.data,
@@ -45,7 +40,6 @@ onmessage = async (e) => {
   if (e.data.message === "loadTexture") {
     try {
       await loadTexture(e.data.url, e.data.ext);
-      console.log("Finished loading texture");
       //   postMessage(workerResult);
     } catch (error) {
       console.error("Got error while running loadEnvMap from worker", error);

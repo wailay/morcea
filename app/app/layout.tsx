@@ -2,16 +2,20 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Morcéa",
+  title: "Morcéa (Morcea) — Luxury Clothing | mrcea.com",
   description:
-    "Discover Morcéa — a new standard in luxury clothing. Join the waitlist for early access.",
+    "Discover Morcéa (Morcea) — a new standard in luxury clothing. Visit mrcea.com and join the waitlist for early access to the Morcéa collection.",
+  keywords: ["Morcéa", "Morcea", "morcea", "mrcea", "mrcea.com", "luxury clothing", "luxury fashion"],
   openGraph: {
-    title: "Morcéa",
+    title: "Morcéa (Morcea) — Luxury Clothing",
     description:
-      "Discover Morcéa — a new standard in luxury clothing. Join the waitlist for early access.",
+      "Discover Morcéa (Morcea) — a new standard in luxury clothing. Visit mrcea.com and join the waitlist for early access.",
     url: "https://mrcea.com",
     siteName: "Morcéa",
     type: "website",
+  },
+  alternates: {
+    canonical: "https://mrcea.com",
   },
   appleWebApp: {
     capable: true,

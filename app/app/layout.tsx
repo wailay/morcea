@@ -2,15 +2,15 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Morcea",
+  title: "Morcéa",
   description:
-    "Discover Morcea — a new standard in luxury fragrance. Join the waitlist for early access.",
+    "Discover Morcéa — a new standard in luxury clothing. Join the waitlist for early access.",
   openGraph: {
-    title: "Morcea",
+    title: "Morcéa",
     description:
-      "Discover Morcea — a new standard in luxury fragrance. Join the waitlist for early access.",
+      "Discover Morcéa — a new standard in luxury clothing. Join the waitlist for early access.",
     url: "https://mrcea.com",
-    siteName: "Morcea",
+    siteName: "Morcéa",
     type: "website",
   },
   appleWebApp: {

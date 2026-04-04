@@ -2,14 +2,21 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Morcéa (Morcea) — Luxury Clothing | mrcea.com",
-  description:
-    "Discover Morcéa (Morcea) — a new standard in luxury clothing. Visit mrcea.com and join the waitlist for early access to the Morcéa collection.",
-  keywords: ["Morcéa", "Morcea", "morcea", "mrcea", "mrcea.com", "luxury clothing", "luxury fashion"],
+  title: "Morcéa Global",
+  description: "Morcéa — Made for the chosen few.",
+  keywords: [
+    "Morcéa",
+    "Morcea",
+    "morcea",
+    "mrcea",
+    "mrcea.com",
+    "streetware",
+    "luxury clothing",
+    "clothing brand",
+  ],
   openGraph: {
-    title: "Morcéa (Morcea) — Luxury Clothing",
-    description:
-      "Discover Morcéa (Morcea) — a new standard in luxury clothing. Visit mrcea.com and join the waitlist for early access.",
+    title: "Morcéa Global",
+    description: "Morcéa — Made for the chosen few.",
     url: "https://mrcea.com",
     siteName: "Morcéa",
     type: "website",

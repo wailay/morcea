@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     siteName: "Morcéa",
     type: "website",
   },
+  icons: {
+    icon: "/favicon.ico",
+  },
   alternates: {
     canonical: "https://mrcea.com",
   },

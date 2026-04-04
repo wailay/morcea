@@ -43,7 +43,7 @@ export function WaitlistModal() {
           <button className="modal-close" onClick={close}>
             &times;
           </button>
-          <h2>Join the waitlist</h2>
+          <h2 className="waitlist">Join the waitlist</h2>
           <form className="modal-form" onSubmit={handleSubmit}>
             <input
               type="text"
@@ -60,11 +60,19 @@ export function WaitlistModal() {
             <input type="email" name="email" placeholder="Email" required />
             <button type="submit">Submit</button>
           </form>
-          <div className={`modal-confirm${submitted ? " modal-confirm-visible" : ""}`}>
+          <div
+            className={`modal-confirm${submitted ? " modal-confirm-visible" : ""}`}
+          >
             <div className="modal-confirm-inner">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="8" fill="rgba(255,255,255,0.15)" />
-                <path d="M5 8.5L7 10.5L11 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M5 8.5L7 10.5L11 6"
+                  stroke="white"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               <span>Added to the waitlist. Stay tuned!</span>
             </div>

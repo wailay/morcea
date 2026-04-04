@@ -6,7 +6,7 @@ canvas {
 
 .waitlist-btn {
   position: fixed;
-  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   padding: 14px 32px;
@@ -40,7 +40,9 @@ canvas {
   z-index: 2000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
   box-sizing: border-box;
 }
 
@@ -148,7 +150,10 @@ canvas {
   overflow: hidden;
   max-height: 0;
   opacity: 0;
-  transition: max-height 0.5s ease, opacity 0.4s ease, padding 0.5s ease;
+  transition:
+    max-height 0.5s ease,
+    opacity 0.4s ease,
+    padding 0.5s ease;
   padding: 0;
 }
 
@@ -176,6 +181,29 @@ canvas {
 .modal-confirm-inner svg {
   flex-shrink: 0;
   display: block;
+}
+
+.social-footer {
+  position: fixed;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
+  width: 90%;
+  max-width: 400px;
+  z-index: 1000;
+}
+
+.social-footer a {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 16px;
+  transition: color 0.3s ease;
+  text-decoration: none;
+}
+
+.social-footer a:hover {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 @keyframes slideUp {

@@ -47,6 +47,21 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Morcéa",
+  alternateName: ["Morcea", "mrcea", "morceaa"],
+  url: "https://mrcea.com",
+  logo: "https://mrcea.com/favicon.ico",
+  description:
+    "Morcéa is a luxury streetwear label launching soon. Made for the chosen few.",
+  sameAs: [
+    "https://www.instagram.com/morceaa/",
+    "https://www.tiktok.com/@morceaa",
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -55,6 +70,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="m-0 overflow-hidden bg-black min-h-screen">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+        <h1 className="sr-only">
+          Morcéa — luxury streetwear, made for the chosen few. Join the waitlist
+          for early access at mrcea.com.
+        </h1>
+        <noscript>
+          <h2>Morcéa</h2>
+          <p>
+            Luxury streetwear label launching soon. Made for the chosen few.
+            Join the waitlist at mrcea.com.
+          </p>
+        </noscript>
         {children}
       </body>
     </html>
